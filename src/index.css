@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  body {
+    @apply font-outfit bg-[#f5f5f5] text-gray-800;
+  }
+
+  a {
+    @apply no-underline text-inherit leading-none cursor-pointer;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+}
+
+@layer components {
+  .container {
+    @apply px-[5%] mx-auto max-w-7xl;
+  }
+
+  .btn {
+    @apply bg-[#B58E0F] text-[#132F4C] font-bold text-lg py-3.5 px-6 rounded-[30px] cursor-pointer border-0 outline-0 transition-all duration-300 hover:bg-[#9a7a0d];
+  }
+
+  .section {
+    @apply py-20 px-5;
+  }
+
+  .section-title {
+    @apply text-4xl font-bold text-center mb-10;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-lg p-8;
+  }
+}
