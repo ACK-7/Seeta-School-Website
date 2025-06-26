@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://ACK-7.github.io/Seeta-School-Website",
+  "homepage": "https://github.com/ACK-7/Seeta-School-Website",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
