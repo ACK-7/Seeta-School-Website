@@ -6,20 +6,20 @@ const Banner = () => {
   useEffect(() => {
     gsap.fromTo(
       '.banner-title',
-      { x: -100, opacity: 0 },
-      { x: 0, opacity: 1, duration: 1.5, delay: 0.3, ease: 'power2.out' }
+      { scale: 0.8, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 1.5, delay: 0.3, ease: 'power2.out' }
     );
 
     gsap.fromTo(
       '.banner-text',
-      { x: 100, opacity: 0 },
-      { x: 0, opacity: 1, duration: 1.5, delay: 0.6, ease: 'power2.out' }
+      { scale: 0.8, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 1.5, delay: 0.6, ease: 'power2.out' }
     );
 
     gsap.fromTo(
       '.banner-buttons',
-      { y: 50, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.2, delay: 0.9, ease: 'power2.out' }
+      { scale: 0.8, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 1.2, delay: 0.9, ease: 'power2.out' }
     );
   }, []);
 

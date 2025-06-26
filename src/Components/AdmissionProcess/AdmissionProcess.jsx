@@ -17,32 +17,30 @@ const AdmissionsProcess = () => {
     // Hero section animations with parallax
     gsap.fromTo(
       '.hero-title',
-      { opacity: 0, y: 100 },
+      { opacity: 0, scale: 0.8 },
       { 
         opacity: 1, 
-        y: 0, 
+        scale: 1, 
         duration: 1.2, 
         ease: 'power4.out',
         scrollTrigger: {
           trigger: '.hero-title',
           start: 'top 80%',
-          scrub: 1
         }
       }
     );
     gsap.fromTo(
       '.hero-subtitle',
-      { opacity: 0, y: 50 },
+      { opacity: 0, scale: 0.8 },
       { 
         opacity: 1, 
-        y: 0, 
+        scale: 1,
         duration: 1.2, 
         delay: 0.4, 
         ease: 'power4.out',
         scrollTrigger: {
           trigger: '.hero-subtitle',
           start: 'top 80%',
-          scrub: 1
         }
       }
     );
@@ -57,7 +55,6 @@ const AdmissionsProcess = () => {
         scrollTrigger: {
           trigger: '.hero-image',
           start: 'top 80%',
-          scrub: 1
         }
       }
     );
@@ -65,7 +62,7 @@ const AdmissionsProcess = () => {
     // Banner animation with scale and fade
     gsap.fromTo(
       '.banner-container',
-      { opacity: 0, scale: 0.9 },
+      { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
         scale: 1,
@@ -74,7 +71,6 @@ const AdmissionsProcess = () => {
         scrollTrigger: {
           trigger: '.banner-container',
           start: 'top 80%',
-          scrub: 1
         },
       }
     );
@@ -82,10 +78,9 @@ const AdmissionsProcess = () => {
     
     gsap.fromTo(
       '.process-item',
-      { opacity: 0, y: 50, scale: 0.95 },
+      { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
-        y: 0,
         scale: 1,
         duration: 0.8,
         stagger: 0.3,
@@ -93,7 +88,6 @@ const AdmissionsProcess = () => {
         scrollTrigger: {
           trigger: '.process-container',
           start: 'top 75%',
-          scrub: 1
         },
       }
     );
@@ -101,16 +95,15 @@ const AdmissionsProcess = () => {
     
     gsap.fromTo(
       '.process-image',
-      { opacity: 0, x: 100 },
+      { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
-        x: 0,
+        scale: 1,
         duration: 1,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: '.process-container',
           start: 'top 80%',
-          scrub: 1
         },
       }
     );
@@ -118,16 +111,15 @@ const AdmissionsProcess = () => {
     // Quote section with static background
     gsap.fromTo(
       '.quote-content',
-      { opacity: 0, y: 30 },
+      { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
-        y: 0,
+        scale: 1,
         duration: 1,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: '.quote-section',
           start: 'top 80%',
-          scrub: 1
         },
       }
     );
@@ -135,17 +127,16 @@ const AdmissionsProcess = () => {
     // Why Choose section cards animation
     gsap.fromTo(
       '.feature-card',
-      { opacity: 0, y: 50 },
+      { opacity: 0, scale: 0.8 },
       {
         opacity: 2,
-        y: 0,
+        scale: 1,
         duration: 0.8,
         stagger: 0.2,
         ease: 'power2.out',
         scrollTrigger: {
           trigger: '.features-container',
           start: 'top 75%',
-          scrub: 1
         },
       }
     );
@@ -153,16 +144,16 @@ const AdmissionsProcess = () => {
     // Alert section animation
     gsap.fromTo(
       '.alert-section',
-      { opacity: 0, x: -100 },
+      { opacity: 0, scale: 0.8},
       {
         opacity: 1,
-        x: 0,
+        scale: 1,
+        delay: 0.2,
         duration: 1,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: '.alert-section',
           start: 'top 80%',
-          scrub: 1
         },
       }
     );
@@ -174,12 +165,12 @@ const AdmissionsProcess = () => {
       {
         opacity: 1,
         scale: 1,
+        delay: 0.4,
         duration: 1,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: '.alert-section',
           start: 'top 80%',
-          scrub: 1
         },
       }
     );
@@ -304,7 +295,7 @@ const AdmissionsProcess = () => {
         <img
           src={image}
           alt="Inspirational school background with students"
-          className="quote-image absolute inset-0 w-full h-full object-cover opacity-30"
+          className="quote-image absolute inset-0 w-full h-full object-cover opacity-30 "
         />
         <div className="quote-content container mx-auto px-6 text-center relative z-10">
           <h3 className="text-3xl md:text-4xl font-semibold text-gray-800 italic mb-6">

@@ -14,6 +14,7 @@ import {
   User
 } from "lucide-react";
 import axios from 'axios'; // Import Axios
+import Swal from 'sweetalert2';
 
 const ModernAlbumGallery = () => {
   const [currentView, setCurrentView] = useState("albums"); // "albums" or "gallery"
@@ -34,21 +35,21 @@ const ModernAlbumGallery = () => {
     `anon_${Math.random().toString(36).substring(2, 10)}`
   ).current;
 
+  const getImageUrl = (file_path) => `${file_path}`;
+
   // Fetch albums on mount
   useEffect(() => {
-  const fetchAlbums = async () => {
-    try {
-      const res = await axios.get("http://localhost/API/seeta/albums.php");
-      // Ensure albums is always an array
-      setAlbums(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("Failed to load albums", err);
-      setAlbums([]); // fallback to empty array on error
-    }
-  };
-
-  fetchAlbums();
-}, []);
+    const fetchAlbums = async () => {
+      try {
+        const res = await axios.get("http://localhost/API/seeta/albums.php?public=1");
+        setAlbums(Array.isArray(res.data.data) ? res.data.data : []);
+      } catch (err) {
+        console.error("Failed to load albums", err);
+        setAlbums([]);
+      }
+    };
+    fetchAlbums();
+  }, []);
 
   // GSAP animations
   useEffect(() => {
@@ -81,9 +82,9 @@ const ModernAlbumGallery = () => {
       const fetchImages = async () => {
         try {
           const res = await axios.get("http://localhost/API/seeta/images.php", {
-            params: { album_id: selectedAlbum.id }
+            params: { album_id: selectedAlbum.id, public: 1 }
           });
-          const data = res.data;
+          const data = Array.isArray(res.data.data) ? res.data.data : [];
 
           const initialLikes = {};
           const initialUserLikes = {};
@@ -144,7 +145,7 @@ const ModernAlbumGallery = () => {
         if (result.success) {
           setLikes((prev) => ({
             ...prev,
-            [imageId]: prev[imageId] + 1
+            [imageId]: result.likes
           }));
           setUserLikes((prev) => ({
             ...prev,
@@ -266,9 +267,23 @@ const ModernAlbumGallery = () => {
             [imageId]: [...(prev[imageId] || []), newCommentObj]
           }));
           setNewComment("");
+
+          // Show success SweetAlert
+          Swal.fire({
+            icon: 'success',
+            title: 'Comment Added!',
+            text: 'Your comment was submitted successfully.',
+            timer: 1500,
+            showConfirmButton: false
+          });
         }
       } catch (err) {
         console.error("Failed to submit comment", err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: 'Could not submit your comment. Please try again.',
+        });
       }
     }
   };
@@ -294,7 +309,7 @@ const ModernAlbumGallery = () => {
               >
                 <div className="relative overflow-hidden">
                   <img
-                    src={album.cover_image}
+                    src={album.cover_image ? album.cover_image : '/path/to/default.jpg'}
                     alt={album.title}
                     className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
                   />

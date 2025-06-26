@@ -26,12 +26,21 @@ import Sports from "./Pages/Sports";
 import Gallery from "./Pages/Gallery";
 import ContactUs from "./Pages/ContactUs";
 import Gallery1 from "./Pages/Dashboard/GalleryDash";
+import NewsManager from "./Pages/Dashboard/NewsManager";
 import BackToTop from "./Components/BackToTop";
 import ScrollToTop from "./Components/ScrollToTop";
 
 function RequireAuth({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authLoading } = useAuth();
   const location = useLocation();
+  if (authLoading) {
+    // Show a loading spinner or nothing while checking auth
+    return (
+      <div className="text-white text-center py-10">
+        Checking authentication...
+      </div>
+    );
+  }
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -45,6 +54,7 @@ const App = () => {
         <ScrollToTop />
         <div className="min-h-screen bg-slate-900">
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} caseSensitive={false} />
             <Route
@@ -58,15 +68,49 @@ const App = () => {
               caseSensitive={false}
             />
             <Route path="/apply" element={<Apply />} caseSensitive={false} />
-            <Route path="/admission-overview" element={<AdmissionsProcess />} caseSensitive={false} />
-            <Route path="/fees-structure" element={<FeesStructure />} caseSensitive={false} />
-            <Route path="/curriculum" element={<Curriculum />} caseSensitive={false} />
-            <Route path="/academic-calendar" element={<Calendar />} caseSensitive={false} />
-            <Route path="/student-clubs" element={<Clubs />} caseSensitive={false} />
-            <Route path="/sports-athletics" element={<Sports />} caseSensitive={false} />
-            <Route path="/gallery" element={<Gallery />} caseSensitive={false} />
-            <Route path="/contact-us" element={<ContactUs />} caseSensitive={false} />
+            <Route
+              path="/admission-overview"
+              element={<AdmissionsProcess />}
+              caseSensitive={false}
+            />
+            <Route
+              path="/fees-structure"
+              element={<FeesStructure />}
+              caseSensitive={false}
+            />
+            <Route
+              path="/curriculum"
+              element={<Curriculum />}
+              caseSensitive={false}
+            />
+            <Route
+              path="/academic-calendar"
+              element={<Calendar />}
+              caseSensitive={false}
+            />
+            <Route
+              path="/student-clubs"
+              element={<Clubs />}
+              caseSensitive={false}
+            />
+            <Route
+              path="/sports-athletics"
+              element={<Sports />}
+              caseSensitive={false}
+            />
+            <Route
+              path="/gallery"
+              element={<Gallery />}
+              caseSensitive={false}
+            />
+            <Route
+              path="/contact-us"
+              element={<ContactUs />}
+              caseSensitive={false}
+            />
             <Route path="/login" element={<Login />} />
+
+            {/* Protected routes */}
             <Route
               path="/dashboard"
               element={
@@ -88,6 +132,14 @@ const App = () => {
               element={
                 <RequireAuth>
                   <Gallery1 />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/dashboard/events"
+              element={
+                <RequireAuth>
+                  <NewsManager />
                 </RequireAuth>
               }
             />

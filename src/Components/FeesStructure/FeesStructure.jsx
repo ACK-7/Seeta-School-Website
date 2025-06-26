@@ -274,16 +274,15 @@ const SchoolFeesStructure = () => {
     // Hero section animation
     gsap.fromTo(
       heroRef.current,
-      { opacity: 0, y: -100 },
+      { opacity: 0, scale: 0.7 },
       { 
         opacity: 1, 
-        y: 0, 
+        scale: 1, 
         duration: 1.2, 
         ease: "power3.out",
         scrollTrigger: {
           trigger: heroRef.current,
           start: "top 80%",
-          scrub: 1
         }
       }
     );
@@ -300,7 +299,6 @@ const SchoolFeesStructure = () => {
         scrollTrigger: {
           trigger: termButtonsRef.current,
           start: "top 80%",
-          scrub: 1
         }
       }
     );
@@ -308,32 +306,30 @@ const SchoolFeesStructure = () => {
     // Fee cards initial animation
     gsap.fromTo(
       oLevelCardRef.current,
-      { opacity: 0, x: -100 },
+      { opacity: 0, scale: 0.7 },
       { 
         opacity: 1, 
-        x: 0, 
+        scale: 1, 
         duration: 0.8, 
         ease: "power3.out",
         scrollTrigger: {
           trigger: oLevelCardRef.current,
           start: "top 80%",
-          scrub: 1
         }
       }
     );
 
     gsap.fromTo(
       aLevelCardRef.current,
-      { opacity: 0, x: 100 },
+      { opacity: 0, scale: 0.7 },
       { 
         opacity: 1, 
-        x: 0, 
+        scale: 1, 
         duration: 0.8, 
         ease: "power3.out",
         scrollTrigger: {
           trigger: aLevelCardRef.current,
           start: "top 80%",
-          scrub: 1
         }
       }
     );
@@ -341,30 +337,28 @@ const SchoolFeesStructure = () => {
     // Additional Requirements section
     gsap.fromTo(
       additionalReqRef.current.querySelector('.grid > div:first-child'),
-      { opacity: 0, x: -100 },
+      { opacity: 0, scale: 0.7 },
       {
         opacity: 1,
-        x: 0,
+        scale: 1,
         duration: 0.8,
         scrollTrigger: {
           trigger: additionalReqRef.current,
           start: "top 80%",
-          scrub: 1
         }
       }
     );
 
     gsap.fromTo(
       additionalReqRef.current.querySelector('.grid > div:last-child'),
-      { opacity: 0, x: 100 },
+      { opacity: 0, scale: 0.7 },
       {
         opacity: 1,
-        x: 0,
+        scale: 1,
         duration: 0.8,
         scrollTrigger: {
           trigger: additionalReqRef.current,
-          start: "top 80%",
-          scrub: 1
+          start: "top 80%", 
         }
       }
     );
@@ -372,30 +366,28 @@ const SchoolFeesStructure = () => {
     // Payment Information section
     gsap.fromTo(
       paymentInfoRef.current.querySelector('.grid > div:first-child'),
-      { opacity: 0, x: -100 },
+      { opacity: 0, scale: 0.7 },
       {
         opacity: 1,
-        x: 0,
+        scale: 1,
         duration: 0.8,
         scrollTrigger: {
           trigger: paymentInfoRef.current,
           start: "top 80%",
-          scrub: 1
         }
       }
     );
 
     gsap.fromTo(
       paymentInfoRef.current.querySelector('.grid > div:last-child'),
-      { opacity: 0, x: 100 },
+      { opacity: 0, scale: 0.7 },
       {
         opacity: 1,
-        x: 0,
+        scale: 1,
         duration: 0.8,
         scrollTrigger: {
           trigger: paymentInfoRef.current,
           start: "top 80%",
-          scrub: 1
         }
       }
     );
@@ -411,7 +403,6 @@ const SchoolFeesStructure = () => {
         scrollTrigger: {
           trigger: contactSectionRef.current,
           start: "top 80%",
-          scrub: 1
         }
       }
     );
@@ -419,9 +410,6 @@ const SchoolFeesStructure = () => {
 
   return (
     <>
-      
-      
-
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
         {/* Term Selection */}

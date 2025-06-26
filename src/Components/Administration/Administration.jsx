@@ -49,7 +49,6 @@ const Administration = () => {
           trigger: ".text-animation",
           start: "top 80%",
           end: "bottom 60%",
-          scrub: 0.5,
         },
       }
     );
@@ -65,7 +64,6 @@ const Administration = () => {
           trigger: ".text-animation",
           start: "top 80%",
           end: "bottom 60%",
-          scrub: 0.5,
         },
       }
     );
@@ -76,20 +74,20 @@ const Administration = () => {
         // Generate random starting position from off-screen
         const getRandomStartPosition = () => {
           const directions = [
-            { x: -200, y: 0 }, // From left
-            { x: 200, y: 0 }, // From right
-            { x: 0, y: -200 }, // From top
-            { x: 0, y: 200 }, // From bottom
-            { x: -150, y: -150 }, // From top-left diagonal
-            { x: 150, y: -150 }, // From top-right diagonal
-            { x: -150, y: 150 }, // From bottom-left diagonal
-            { x: 150, y: 150 }, // From bottom-right diagonal
+            { x: -200, y: 0 }, 
+            { x: 200, y: 0 }, 
+            { x: 0, y: -200 }, 
+            { x: 0, y: 200 }, 
+            { x: -150, y: -150 }, 
+            { x: 150, y: -150 }, 
+            { x: -150, y: 150 }, 
+            { x: 150, y: 150 }, 
           ];
 
           // Add some randomness to the distance
           const randomDirection =
             directions[Math.floor(Math.random() * directions.length)];
-          const randomMultiplier = 0.8 + Math.random() * 0.6; // Between 0.8 and 1.4
+          const randomMultiplier = 0.8 + Math.random() * 0.6; 
 
           return {
             x: randomDirection.x * randomMultiplier,
@@ -106,7 +104,7 @@ const Administration = () => {
             y: startPos.y,
             opacity: 0,
             scale: 0.8,
-            rotation: Math.random() * 20 - 10, // Random slight rotation (-10 to 10 degrees)
+            rotation: Math.random() * 20 - 10, 
           },
           {
             x: 0,
@@ -114,14 +112,13 @@ const Administration = () => {
             opacity: 1,
             scale: 1,
             rotation: 0,
-            duration: 1.2 + Math.random() * 0.4, // Vary duration slightly (1.2 to 1.6s)
+            duration: 1 + Math.random() * 0.4, 
             ease: "power3.out",
             scrollTrigger: {
-              trigger: card,
-              start: "top 85%",
-              scrub: 0.5,
+            trigger: card,
+            start: "top 85%",
             },
-            delay: index * 0.15 + Math.random() * 0.2, // More staggered timing
+            delay: index * 0.15 + Math.random() * 0.2, 
           }
         );
 
@@ -149,7 +146,6 @@ const Administration = () => {
             scrollTrigger: {
               trigger: img,
               start: "top 85%",
-              scrub: 0.5,
             },
             delay: index * 0.3,
           }

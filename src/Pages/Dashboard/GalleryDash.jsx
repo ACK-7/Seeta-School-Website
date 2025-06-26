@@ -17,7 +17,9 @@ import {
   HiOutlineFolder,
   HiOutlineCamera,
   HiOutlineEye,
-  HiOutlineStar
+  HiOutlineStar,
+  HiEye,
+  HiEyeOff
 } from "react-icons/hi";
 import axios from 'axios';
 
@@ -263,16 +265,33 @@ export default function GalleryDashboard() {
       formData.append("title", title || file.name);
       formData.append("category", "General");
 
-      const res = await apiClient.post('upload-image.php', formData, {
+      await apiClient.post('upload-image.php', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setImages([...images, res.data.data]);
+      await fetchImages(selectedAlbum.id);
       setTitle("");
       fileInputRef.current.value = "";
       setShowUploadForm(false);
+
+      // Show success SweetAlert
+      Swal.fire({
+        icon: 'success',
+        title: 'Image Uploaded!',
+        text: 'Your image was uploaded successfully.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
     } catch (err) {
       console.error("Image upload failed:", err);
+
+      // Show error SweetAlert
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: 'There was a problem uploading your image. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
@@ -280,13 +299,37 @@ export default function GalleryDashboard() {
 
   // Delete Image
   const handleDeleteImage = async (img) => {
-    try {
-      await apiClient.delete('delete-image.php', {
-        data: { image_id: img.id },
-      });
-      setImages(images.filter((i) => i.id !== img.id));
-    } catch (err) {
-      console.error("Failed to delete image:", err);
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Delete "${img.title}"? This cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await apiClient.delete('delete-images.php', {
+          data: { image_id: img.id },
+        });
+        setImages(images.filter((i) => i.id !== img.id));
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'The image has been deleted.',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } catch (err) {
+        console.error("Failed to delete image:", err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: 'Could not delete the image. Please try again.',
+        });
+      }
     }
   };
 
@@ -306,7 +349,6 @@ export default function GalleryDashboard() {
       const formData = new FormData();
       formData.append("image_id", editImage.id);
       formData.append("title", editTitle);
-      formData.append("category", editCategory);
       if (editImageFile) {
         formData.append("file", editImageFile);
       }
@@ -315,10 +357,25 @@ export default function GalleryDashboard() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setImages(images.map((img) => (img.id === editImage.id ? res.data.data : img)));
+      Swal.fire({
+        icon: 'success',
+        title: 'Image Updated!',
+        text: 'The image details have been updated.',
+        timer: 1500,
+        showConfirmButton: false
+      });
+
+      // Refetch images to get the latest file_path
+      await fetchImages(selectedAlbum.id);
       setEditImage(null);
+
     } catch (err) {
       console.error("Failed to update image:", err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Could not update the image. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
@@ -337,6 +394,34 @@ export default function GalleryDashboard() {
       });
     } catch (err) {
       console.error("Failed to update cover image:", err);
+    }
+  };
+
+  // Toggle Album Visibility
+  const toggleAlbumVisibility = async (album) => {
+    try {
+      await apiClient.post('toggle-album-visibility.php', {
+        album_id: album.id,
+        visible: album.visible ? 0 : 1
+      });
+      // Refetch albums or update state
+      fetchAlbums();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Failed', text: 'Could not update album visibility.' });
+    }
+  };
+
+  // Toggle Image Visibility
+  const toggleImageVisibility = async (img) => {
+    try {
+      await apiClient.post('toggle-image-visibility.php', {
+        image_id: img.id,
+        visible: img.visible ? 0 : 1
+      });
+      // Refetch images or update state
+      fetchImages(selectedAlbum.id);
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Failed', text: 'Could not update image visibility.' });
     }
   };
 
@@ -444,7 +529,12 @@ export default function GalleryDashboard() {
                           >
                             <HiPencil className="w-4 h-4" />
                         </button>
-
+                        <button
+                          onClick={() => toggleAlbumVisibility(album)}
+                          title={album.visible ? "Hide from public" : "Show on public"}
+                        >
+                          {album.visible ? <HiEye className="text-green-500" /> : <HiEyeOff className="text-gray-400" />}
+                        </button>
                       </div>
                     </button>
                   </li>
@@ -457,46 +547,12 @@ export default function GalleryDashboard() {
           {selectedAlbum && (
             <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 shadow-lg shadow-blue-500/10 border border-white/20">
               <button
-                onClick={() => setShowUploadForm(!showUploadForm)}
+                onClick={() => setShowUploadForm(true)}
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3 rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <HiOutlineUpload className="w-5 h-5" />
                 <span>Upload Images</span>
               </button>
-              {showUploadForm && (
-                <form onSubmit={handleUpload} className="mt-4 space-y-4">
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Image Title (Optional)"
-                    className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm"
-                  />
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    required
-                    className="w-full p-3 border border-gray-200 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 bg-white/70 backdrop-blur-sm"
-                  />
-                  <div className="flex space-x-2">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium"
-                    >
-                      {loading ? "Uploading..." : "Upload"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowUploadForm(false)}
-                      className="px-4 py-3 bg-gray-200 text-gray-600 rounded-xl hover:bg-gray-300"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
             </div>
           )}
         </aside>
@@ -520,7 +576,7 @@ export default function GalleryDashboard() {
                       </span>
                       <span className="flex items-center space-x-1">
                         <HiOutlineHeart className="w-4 h-4" />
-                        <span>{filteredImages.reduce((acc, img) => acc + (img?.likes || 0), 0)} total likes</span>
+                        <span>{filteredImages.reduce((acc, img) => acc + (Number(img?.likes) || 0), 0)} total likes</span>
                       </span>
                     </div>
                   </div>
@@ -584,61 +640,69 @@ export default function GalleryDashboard() {
                     {/* Grid View */}
                     {viewMode === "grid" && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {filteredImages.map((img) => (
-                          <div
-                            key={img.id}
-                            className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                          >
-                            <div className="relative overflow-hidden">
-                              <img
-                                src={img.file_path}
-                                alt={img.title}
-                                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
-                              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="relative">
-                                  <button className="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
-                                    <HiDotsVertical className="w-4 h-4" />
-                                  </button>
+                        {filteredImages
+                          .filter(img => img && img.file_path)
+                          .map(img => (
+                            <div
+                              key={img.id}
+                              className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                            >
+                              <div className="relative overflow-hidden">
+                                <img
+                                  src={img.file_path}
+                                  alt={img.title || ""}
+                                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
+                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="relative">
+                                    <button className="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
+                                      <HiDotsVertical className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="p-4">
+                                <h3 className="font-semibold text-gray-800 mb-1 truncate">{img.title}</h3>
+                                <p className="text-sm text-gray-500 mb-3">{img.category}</p>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-1 text-red-500">
+                                    <HiOutlineHeart className="w-4 h-4" />
+                                    <span className="text-sm font-medium">{img.likes || 0}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <button
+                                      onClick={() => handleSetCoverImage(img)}
+                                      className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                      title="Set as cover"
+                                    >
+                                      <HiOutlineStar className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => openEditModal(img)}
+                                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                      title="Edit"
+                                    >
+                                      <HiPencil className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteImage(img)}
+                                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                      title="Delete"
+                                    >
+                                      <HiTrash className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => toggleImageVisibility(img)}
+                                      title={img.visible ? "Hide from public" : "Show on public"}
+                                    >
+                                      {img.visible ? <HiEye className="text-green-500" /> : <HiEyeOff className="text-gray-400" />}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                            <div className="p-4">
-                              <h3 className="font-semibold text-gray-800 mb-1 truncate">{img.title}</h3>
-                              <p className="text-sm text-gray-500 mb-3">{img.category}</p>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-1 text-red-500">
-                                  <HiOutlineHeart className="w-4 h-4" />
-                                  <span className="text-sm font-medium">{img.likes || 0}</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <button
-                                    onClick={() => handleSetCoverImage(img)}
-                                    className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                    title="Set as cover"
-                                  >
-                                    <HiOutlineStar className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => openEditModal(img)}
-                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                    title="Edit"
-                                  >
-                                    <HiPencil className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteImage(img)}
-                                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Delete"
-                                  >
-                                    <HiTrash className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     )}
 
@@ -656,50 +720,58 @@ export default function GalleryDashboard() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100">
-                            {filteredImages.map((img) => (
-                              <tr key={img.id} className="hover:bg-gray-50/50 transition-colors">
-                                <td className="py-4 px-4">
-                                  <img
-                                    src={img.file_path}
-                                    alt={img.title}
-                                    className="w-12 h-12 object-cover rounded-lg"
-                                  />
-                                </td>
-                                <td className="py-4 px-4 font-medium text-gray-800">{img.title}</td>
-                                <td className="py-4 px-4 text-gray-600">{img.category}</td>
-                                <td className="py-4 px-4">
-                                  <div className="flex items-center space-x-1 text-red-500">
-                                    <HiOutlineHeart className="w-4 h-4" />
-                                    <span>{img.likes || 0}</span>
-                                  </div>
-                                </td>
-                                <td className="py-4 px-4">
-                                  <div className="flex items-center justify-end space-x-2">
-                                    <button
-                                      onClick={() => handleSetCoverImage(img)}
-                                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                      title="Set as cover"
-                                    >
-                                      <HiOutlineStar className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => openEditModal(img)}
-                                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                      title="Edit"
-                                    >
-                                      <HiPencil className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteImage(img)}
-                                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                      title="Delete"
-                                    >
-                                      <HiTrash className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
+                            {filteredImages
+                              .filter(img => img && img.file_path)
+                              .map(img => (
+                                <tr key={img.id} className="hover:bg-gray-50/50 transition-colors">
+                                  <td className="py-4 px-4">
+                                    <img
+                                      src={img.file_path}
+                                      alt={img.title || ""}
+                                      className="w-12 h-12 object-cover rounded-lg"
+                                    />
+                                  </td>
+                                  <td className="py-4 px-4 font-medium text-gray-800">{img.title}</td>
+                                  <td className="py-4 px-4 text-gray-600">{img.category}</td>
+                                  <td className="py-4 px-4">
+                                    <div className="flex items-center space-x-1 text-red-500">
+                                      <HiOutlineHeart className="w-4 h-4" />
+                                      <span>{img.likes || 0}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-4">
+                                    <div className="flex items-center justify-end space-x-2">
+                                      <button
+                                        onClick={() => handleSetCoverImage(img)}
+                                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                        title="Set as cover"
+                                      >
+                                        <HiOutlineStar className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => openEditModal(img)}
+                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                        title="Edit"
+                                      >
+                                        <HiPencil className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteImage(img)}
+                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete"
+                                      >
+                                        <HiTrash className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => toggleImageVisibility(img)}
+                                        title={img.visible ? "Hide from public" : "Show on public"}
+                                      >
+                                        {img.visible ? <HiEye className="text-green-500" /> : <HiEyeOff className="text-gray-400" />}
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                       </div>
@@ -717,6 +789,55 @@ export default function GalleryDashboard() {
           )}
         </section>
       </main>
+
+      {/* Upload Image Modal */}
+      {showUploadForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-800">Upload Image</h3>
+              <button
+                onClick={() => setShowUploadForm(false)}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <HiOutlineX className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpload} className="p-6 space-y-4">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Image Title (Optional)"
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm"
+              />
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                required
+                className="w-full p-3 border border-gray-200 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 bg-white/70 backdrop-blur-sm"
+              />
+              <div className="flex space-x-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium"
+                >
+                  {loading ? "Uploading..." : "Upload"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowUploadForm(false)}
+                  className="px-4 py-3 bg-gray-200 text-gray-600 rounded-xl hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal: Edit Image */}
       {editImage && (

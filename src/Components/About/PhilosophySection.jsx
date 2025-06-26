@@ -1,17 +1,16 @@
 import React, { useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import philosophyImg from '/src/assets/about us.jpg'; // Replace with your actual image path
-
+import philosophyImg from '/src/assets/about us.jpg'; 
 gsap.registerPlugin(ScrollTrigger);
 
 const PhilosophySection = () => {
   useEffect(() => {
     gsap.fromTo(
       '.philosophy-title',
-      { x: -50, opacity: 0 },
+      { scale: 0.8, opacity: 0 },
       {
-        x: 0,
+        scale: 1,
         opacity: 1,
         duration: 1.2,
         ease: 'power2.out',
@@ -24,9 +23,9 @@ const PhilosophySection = () => {
 
     gsap.fromTo(
       '.philosophy-text',
-      { x: -50, opacity: 0 },
+      { scale: 0.8, opacity: 0 },
       {
-        x: 0,
+        scale: 1,
         opacity: 1,
         duration: 1.4,
         delay: 0.3,
@@ -40,9 +39,9 @@ const PhilosophySection = () => {
 
     gsap.fromTo(
       '.philosophy-img',
-      { x: 50, opacity: 0 },
+      { scale: 0.8, opacity: 0 },
       {
-        x: 0,
+        scale: 1,
         opacity: 1,
         duration: 1.4,
         ease: 'power2.out',

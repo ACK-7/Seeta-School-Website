@@ -15,11 +15,11 @@ const ApplyNow = () => {
         opacity: 2,
         y: 50,
         duration: 1,
+        delay: 0.7,
         stagger: 0.1,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 80%",
-          scrub: true,
         },
         onComplete: () => {
           document.querySelectorAll('.feature-card').forEach(el => el.classList.remove('animate-hidden'));
@@ -29,17 +29,17 @@ const ApplyNow = () => {
 
     gsap.fromTo(
       ".timeline-item",
-      { opacity: 0, x: -100 },
+      { opacity: 0, scale: 0.7 },
       {
         opacity: 2,
-        x: 0,
+        scale: 1,
         duration: 1,
+        delay: 0.7,
         stagger: 0.3,
         ease: "power3.out",
         scrollTrigger: {
           trigger: ".timeline-section",
           start: "top 80%",
-          scrub: true,
         },
         onComplete: () => {
           document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('animate-hidden'));
@@ -49,16 +49,16 @@ const ApplyNow = () => {
 
     gsap.fromTo(
       ".timeline-image",
-      { opacity: 0, x: 100 },
+      { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
-        x: 0,
-        duration: 1,
+        scale: 1,
+        duration: 1.2,
+        delay: 0.7,
         ease: "power3.out",
         scrollTrigger: {
           trigger: ".timeline-section",
           start: "top 80%",
-          scrub: true,
         },
         onComplete: () => {
           document.querySelectorAll('.timeline-image').forEach(el => el.classList.remove('animate-hidden'));
@@ -161,7 +161,7 @@ const ApplyNow = () => {
               <img
                 src="src/assets/application.jpg"
                 alt="Application Process"
-                className="rounded-2xl shadow-lg h-[600px] max-w-md object-cover border-4 border-blue-200"
+                className="rounded-2xl shadow-lg h-[600px] object-cover border-4 border-blue-200"
               />
             </div>
           </div>
