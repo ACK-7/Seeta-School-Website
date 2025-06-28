@@ -16,35 +16,71 @@ import badge from "../assets/Badge.jpeg";
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, setUser } = useAuth();
+  const { login, user } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Redirect if already logged in
   useEffect(() => {
-    const stored = localStorage.getItem("authUser");
-    if (stored) {
-      setUser(JSON.parse(stored));
+    if (user) {
+      console.log("User already logged in, redirecting...");
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
     }
-  }, [setUser]);
+  }, [user, navigate, location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
+    console.log("Login attempt with username:", username);
+
     try {
-      if (username === "admin" && password === "password") {
-        login();
-        const from = location.state?.from?.pathname || "/dashboard";
-        navigate(from, { replace: true });
+      const res = await fetch("http://localhost/API/seeta/teacher_login.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      console.log("Response status:", res.status);
+      console.log("Response headers:", res.headers);
+
+      if (res.ok) {
+        const userObj = await res.json();
+        console.log("Login successful, received user data:", userObj);
+        
+        // Validate that the response has the expected structure
+        if (userObj && userObj.username) {
+          // Ensure role is set (default to 'teacher' if not provided)
+          if (!userObj.role) {
+            userObj.role = 'teacher';
+            console.log("Role not provided, defaulting to 'teacher'");
+          }
+          
+          login(userObj);
+          navigate("/dashboard");
+        } else {
+          console.error("Invalid user object received:", userObj);
+          setError("Invalid response from server.");
+        }
       } else {
-        setError("Invalid credentials. Please try again.");
+        console.log("Login failed with status:", res.status);
+        try {
+          const errData = await res.json();
+          console.log("Error response:", errData);
+          setError(errData.error || "Invalid credentials.");
+        } catch (parseError) {
+          console.error("Error parsing error response:", parseError);
+          setError("Invalid credentials.");
+        }
       }
     } catch (err) {
-      setError("Failed to login. Please try again.");
+      console.error("Network error during login:", err);
+      setError("Network error. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
@@ -196,31 +232,12 @@ function Login() {
                   </button>
                 </div>
 
-                {/* Forgot Password */}
-                {/* <div className="text-right">
-                  <a href="#" className="text-xs text-red-500 hover:text-red-600">
-                    Forgot password?
-                  </a>
-                </div> */}
-
                 {/* Error Message */}
-                {/* {error && (
+                {error && (
                   <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-sm">
                     {error}
                   </div>
-                )} */}
-
-                {/* Remember Me */}
-                {/* <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    className="w-4 h-4 text-red-500 border-gray-300 rounded focus:ring-red-400"
-                  />
-                  <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
-                    Remember me
-                  </label>
-                </div> */}
+                )}
 
                 {/* Login Button */}
                 <button

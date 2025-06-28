@@ -82,7 +82,7 @@ const CallToActionSection = () => {
     if (validateForm()) {
       setLoading(true);
       axios
-        .post("http://localhost/contact-backend/seeta.php", formData)
+        .post("http://localhost/API/seeta/seeta.php", formData)
         .then((response) => {
           console.log("Response from backend:", response.data);
 

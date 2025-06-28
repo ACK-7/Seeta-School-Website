@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaGraduationCap,
   FaChalkboardTeacher,
@@ -17,7 +17,7 @@ import {
   FaChartLine,
   FaClipboardList,
   FaUserGraduate,
-  // FaBus,
+  FaUser,
   // FaUtensils,
   FaTrophy,
   FaCalendarCheck,
@@ -37,9 +37,20 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Add state for unread messages
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Fetch unread messages count (replace with your actual API call)
+  useEffect(() => {
+    // Example: fetchUnreadMessagesCount().then(count => setUnreadMessages(count));
+    // For demo, let's set it to 3
+    setUnreadMessages(3);
+  }, []);
+
+  // Update menuItems to include unread badge for Messages
   const menuItems = [
     { label: "Dashboard", icon: <FaTachometerAlt />, path: "/dashboard" },
     {
@@ -52,13 +63,16 @@ const Dashboard = () => {
       icon: <FaChalkboardTeacher />,
       path: "/dashboard/teachers",
     },
-    // { label: "Classes", icon: <FaBook />, path: "/dashboard/classes" },
-    // { label: "Attendance", icon: <FaCalendarCheck />, path: "/dashboard/attendance" },
-    // { label: "Grades", icon: <FaClipboardList />, path: "/dashboard/grades" },
     { label: "Events", icon: <FaCalendarAlt />, path: "/dashboard/events" },
-    { label: "Messages", icon: <FaEnvelope />, path: "/dashboard/messages" },
+    {
+      label: "Messages",
+      icon: <FaEnvelope />,
+      path: "/dashboard/messages",
+    },
     { label: "Gallery", icon: <FaImages />, path: "/dashboard/gallery" },
-    { label: "Settings", icon: <FaCog />, path: "/dashboard/settings" },
+    ...(user?.role === "super_admin"
+      ? [{ label: "Settings", icon: <FaCog />, path: "/dashboard/settings" }]
+      : []),
     { label: "Log out", icon: <FaSignOutAlt />, path: "/" },
   ];
 
@@ -251,340 +265,9 @@ const Dashboard = () => {
     const totalReceived = 453000;
     const totalPending = 75000;
     const monthlyGrowth = 12.5;
-
-    return (
-      <div className="bg-gradient-to-br from-[#1f2937] to-[#111827] p-6 rounded-xl border border-gray-700 shadow-lg">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-500/20 rounded-lg">
-              <DollarSign className="w-5 h-5 text-green-400" />
-            </div>
-            <h2 className="text-xl font-semibold text-white">Earnings</h2>
-          </div>
-          <div className="text-sm text-gray-400">This Year</div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-sm text-green-400 font-medium">
-                Received
-              </span>
-            </div>
-            <div className="text-xl font-bold text-white">
-              ${(totalReceived / 1000).toFixed(0)}k
-            </div>
-            <div className="text-xs text-green-400">
-              +{monthlyGrowth}% from last month
-            </div>
-          </div>
-
-          <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-orange-400" />
-              <span className="text-sm text-orange-400 font-medium">
-                Pending
-              </span>
-            </div>
-            <div className="text-xl font-bold text-white">
-              ${(totalPending / 1000).toFixed(0)}k
-            </div>
-            <div className="text-xs text-orange-400">14 invoices pending</div>
-          </div>
-
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-purple-400" />
-              <span className="text-sm text-purple-400 font-medium">Total</span>
-            </div>
-            <div className="text-xl font-bold text-white">
-              ${((totalReceived + totalPending) / 1000).toFixed(0)}k
-            </div>
-            <div className="text-xs text-purple-400">YTD Revenue</div>
-          </div>
-        </div>
-
-        {/* Chart Area */}
-        <div className="bg-gray-800/30 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-gray-300">Received</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                <span className="text-gray-300">Pending</span>
-              </div>
-            </div>
-            <select className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm text-white">
-              <option>Last 5 months</option>
-              <option>Last 6 months</option>
-              <option>This year</option>
-            </select>
-          </div>
-
-          <div className="h-40 relative">
-            <svg
-              width="100%"
-              height="100%"
-              viewBox="0 0 400 160"
-              className="overflow-visible"
-            >
-              {/* Grid lines */}
-              {[0, 1, 2, 3, 4].map((i) => (
-                <line
-                  key={i}
-                  x1="40"
-                  y1={30 + i * 25}
-                  x2="360"
-                  y2={30 + i * 25}
-                  stroke="#374151"
-                  strokeWidth="0.5"
-                  strokeDasharray="2,2"
-                />
-              ))}
-
-              {/* Bars */}
-              {earningsData.map((data, i) => {
-                const x = 60 + i * 60;
-                const receivedHeight = (data.received / 120000) * 100;
-                const pendingHeight = (data.pending / 120000) * 100;
-
-                return (
-                  <g key={i}>
-                    {/* Received bar */}
-                    <rect
-                      x={x - 15}
-                      y={130 - receivedHeight}
-                      width="15"
-                      height={receivedHeight}
-                      fill="#22c55e"
-                      rx="2"
-                      className="hover:brightness-110 transition-all duration-200"
-                    />
-                    {/* Pending bar */}
-                    <rect
-                      x={x + 2}
-                      y={130 - pendingHeight}
-                      width="15"
-                      height={pendingHeight}
-                      fill="#f97316"
-                      rx="2"
-                      className="hover:brightness-110 transition-all duration-200"
-                    />
-                    {/* Month label */}
-                    <text
-                      x={x}
-                      y="150"
-                      textAnchor="middle"
-                      className="text-xs fill-gray-400"
-                    >
-                      {data.month}
-                    </text>
-                    {/* Value labels */}
-                    <text
-                      x={x - 7}
-                      y={125 - receivedHeight}
-                      textAnchor="middle"
-                      className="text-xs fill-green-400"
-                    >
-                      {(data.received / 1000).toFixed(0)}k
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between text-sm">
-          <div className="text-gray-400">Next collection: May 15, 2024</div>
-          <button className="text-purple-400 hover:text-purple-300 font-medium">
-            View Details →
-          </button>
-        </div>
-      </div>
-    );
   };
 
   // Enhanced Attendance Component
-  const EnhancedAttendanceSection = () => {
-    const attendanceData = [
-      { day: "Mon", present: 92, absent: 8, total: 100 },
-      { day: "Tue", present: 88, absent: 12, total: 100 },
-      { day: "Wed", present: 95, absent: 5, total: 100 },
-      { day: "Thu", present: 85, absent: 15, total: 100 },
-      { day: "Fri", present: 90, absent: 10, total: 100 },
-    ];
-
-    const weeklyAverage = 90;
-    const totalStudentsTracked = 2468;
-    const todayPresent = 2213;
-    const todayAbsent = 255;
-
-    return (
-      <div className="bg-gradient-to-br from-[#1f2937] to-[#111827] p-6 rounded-xl border border-gray-700 shadow-lg">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Calendar className="w-5 h-5 text-blue-400" />
-            </div>
-            <h2 className="text-xl font-semibold text-white">Attendance</h2>
-          </div>
-          <div className="text-sm text-gray-400">This Week</div>
-        </div>
-
-        {/* Today's Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <UserCheck className="w-4 h-4 text-blue-400" />
-              <span className="text-sm text-blue-400 font-medium">
-                Present Today
-              </span>
-            </div>
-            <div className="text-xl font-bold text-white">{todayPresent}</div>
-            <div className="text-xs text-blue-400">
-              {((todayPresent / totalStudentsTracked) * 100).toFixed(1)}%
-              attendance
-            </div>
-          </div>
-
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <UserX className="w-4 h-4 text-red-400" />
-              <span className="text-sm text-red-400 font-medium">
-                Absent Today
-              </span>
-            </div>
-            <div className="text-xl font-bold text-white">{todayAbsent}</div>
-            <div className="text-xs text-red-400">
-              {((todayAbsent / totalStudentsTracked) * 100).toFixed(1)}% absent
-            </div>
-          </div>
-
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-sm text-green-400 font-medium">
-                Weekly Avg
-              </span>
-            </div>
-            <div className="text-xl font-bold text-white">{weeklyAverage}%</div>
-            <div className="text-xs text-green-400">+2.3% vs last week</div>
-          </div>
-        </div>
-
-        {/* Chart Area */}
-        <div className="bg-gray-800/30 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-300">Present</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <span className="text-gray-300">Absent</span>
-              </div>
-            </div>
-            <select className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm text-white">
-              <option>This week</option>
-              <option>Last week</option>
-              <option>This month</option>
-            </select>
-          </div>
-
-          <div className="h-40 relative">
-            <svg
-              width="100%"
-              height="100%"
-              viewBox="0 0 400 160"
-              className="overflow-visible"
-            >
-              {/* Grid lines */}
-              {[0, 1, 2, 3, 4].map((i) => (
-                <line
-                  key={i}
-                  x1="40"
-                  y1={20 + i * 25}
-                  x2="360"
-                  y2={20 + i * 25}
-                  stroke="#374151"
-                  strokeWidth="0.5"
-                  strokeDasharray="2,2"
-                />
-              ))}
-
-              {/* Stacked bars */}
-              {attendanceData.map((data, i) => {
-                const x = 60 + i * 60;
-                const presentHeight = (data.present / 100) * 100;
-                const absentHeight = (data.absent / 100) * 100;
-
-                return (
-                  <g key={i}>
-                    {/* Present bar (bottom) */}
-                    <rect
-                      x={x - 12}
-                      y={120 - presentHeight}
-                      width="24"
-                      height={presentHeight}
-                      fill="#3b82f6"
-                      rx="2"
-                      className="hover:brightness-110 transition-all duration-200"
-                    />
-                    {/* Absent bar (top) */}
-                    <rect
-                      x={x - 12}
-                      y={120 - presentHeight - absentHeight}
-                      width="24"
-                      height={absentHeight}
-                      fill="#ef4444"
-                      rx="2"
-                      className="hover:brightness-110 transition-all duration-200"
-                    />
-                    {/* Day label */}
-                    <text
-                      x={x}
-                      y="140"
-                      textAnchor="middle"
-                      className="text-xs fill-gray-400"
-                    >
-                      {data.day}
-                    </text>
-                    {/* Percentage label */}
-                    <text
-                      x={x}
-                      y={110 - presentHeight - absentHeight}
-                      textAnchor="middle"
-                      className="text-xs fill-white font-medium"
-                    >
-                      {data.present}%
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between text-sm">
-          <div className="text-gray-400">Last updated: 2 hours ago</div>
-          <button className="text-blue-400 hover:text-blue-300 font-medium">
-            View Full Report →
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-[#0a0e1f] to-[#1a2a4a] text-gray-100 font-sans">
@@ -597,26 +280,15 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold tracking-wide">SHS ADMIN</h1>
         </div>
         <div className="flex items-center space-x-4">
-          <input
-            type="text"
-            placeholder="Search"
-            className="p-2 rounded-lg bg-gray-800 text-white border-none focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <div className="relative">
-            <button className="p-2 bg-gray-800 rounded-full">
-              <FaBell className="text-white" />
-            </button>
-            <span className="absolute -top-2 -right-2 bg-red-500 text-xs w-5 h-5 flex items-center justify-center rounded-full">
-              1
-            </span>
-          </div>
+          {/* Removed notification bell and badge */}
           <div className="flex items-center space-x-2">
-            <img
-              src="https://via.placeholder.com/40"
-              alt="Admin"
-              className="w-10 h-10 rounded-full"
-            />
-            <span className="text-sm font-medium">Rose Namayanja</span>
+            <div className="flex items-center space-x-2">
+              {/*  user icon */}
+              <FaUser className="w-10 h-10 text-purple-400 rounded-full bg-gray-800 p-2" />
+              <span className="text-sm font-medium">
+                {user?.role === "super_admin" ? "Admin" : user?.username}
+              </span>
+            </div>
           </div>
         </div>
       </header>
@@ -624,7 +296,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {/* Sidebar */}
         <aside className="space-y-2">
-          {menuItems.map(({ label, icon, path }, index) =>
+          {menuItems.map(({ label, icon, path, unread }, index) =>
             label === "Log out" ? (
               <button
                 key={index}
@@ -648,7 +320,15 @@ const Dashboard = () => {
                 } transition`}
               >
                 {icon}
-                <span>{label}</span>
+                <span>
+                  {label}
+                  {/* Remove this unread badge next to Messages */}
+                  {/* {label === "Messages" && unread > 0 && (
+                    <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {unread}
+                    </span>
+                  )} */}
+                </span>
               </Link>
             )
           )}
@@ -727,12 +407,13 @@ const Dashboard = () => {
                     className="grid grid-cols-5 items-center py-2 border-t border-gray-700"
                   >
                     <div className="flex items-center space-x-2">
-                      <img
-                        src="https://via.placeholder.com/30"
-                        alt={teacher.name}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <span className="text-sm">{teacher.name}</span>
+                      {/* Replace image with user icon */}
+                      <FaUserGraduate className="w-10 h-10 text-purple-400 rounded-full bg-gray-800 p-2" />
+                      <span className="text-sm font-medium">
+                        {user?.role === "super_admin"
+                          ? "Admin"
+                          : user?.username}
+                      </span>
                     </div>
                     <span>{teacher.class}</span>
                     <span>{teacher.subject}</span>
@@ -744,15 +425,6 @@ const Dashboard = () => {
                 ))}
               </div>
             </div>
-          </div>
-
-          {/* Enhanced Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Enhanced Earnings */}
-            <EnhancedEarningsSection />
-
-            {/* Enhanced Attendance */}
-            <EnhancedAttendanceSection />
           </div>
         </main>
       </div>

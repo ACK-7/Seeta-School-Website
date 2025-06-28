@@ -27,6 +27,7 @@ import Gallery from "./Pages/Gallery";
 import ContactUs from "./Pages/ContactUs";
 import Gallery1 from "./Pages/Dashboard/GalleryDash";
 import NewsManager from "./Pages/Dashboard/NewsManager";
+import Settings from "./Pages/Dashboard/Settings";
 import BackToTop from "./Components/BackToTop";
 import ScrollToTop from "./Components/ScrollToTop";
 
@@ -140,6 +141,14 @@ const App = () => {
               element={
                 <RequireAuth>
                   <NewsManager />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/dashboard/settings"
+              element={
+                <RequireAuth>
+                  <Settings />
                 </RequireAuth>
               }
             />

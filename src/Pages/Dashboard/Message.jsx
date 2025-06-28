@@ -4,24 +4,16 @@ import {
   ChevronLeft,
   ChevronRight,
   Inbox,
-  Star,
-  Trash2,
-  Archive,
-  Reply,
-  Forward,
-  MoreVertical,
-  Check,
-  RefreshCw,
-  Mail,
-  Menu,
-  Settings,
-  User,
-  Calendar,
   Send,
   Filter,
   Eye,
   EyeOff,
   X,
+  Menu,
+  Mail,
+  RefreshCw,
+  Settings,
+  User,
 } from "lucide-react";
 
 const Message = () => {
@@ -32,65 +24,94 @@ const Message = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMessages, setSelectedMessages] = useState(new Set());
   const [selectedMessage, setSelectedMessage] = useState(null);
-  const [starredMessages, setStarredMessages] = useState(new Set());
   const [readMessages, setReadMessages] = useState(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
   const [showSent, setShowSent] = useState(false);
+
+  // Reply states
   const [showReply, setShowReply] = useState(false);
   const [replyContent, setReplyContent] = useState("");
+  const [replyLoading, setReplyLoading] = useState(false);
+  const [replySuccess, setReplySuccess] = useState(false);
+  const [replyError, setReplyError] = useState("");
+
+  // Add a loading state for delete
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // 1. Move fetch logic to a function
+  const fetchSubmissions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Simulating API call - replace with your actual API using fetch
-        const response = await fetch(
-          "http://localhost/API/contact_submissions.php",
-          {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-          }
-        );
-
-        const data = await response.json();
-
-        if (data.success) {
-          setSubmissions(data.data || []);
-        } else {
-          throw new Error(data.message || "Failed to fetch data");
+      const response = await fetch(
+        "http://localhost/API/contact_submissions.php",
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
         }
-      } catch (err) {
-        console.error("Error fetching submissions:", err);
+      );
 
-        if (err.name === "AbortError") {
-          setError("Request timeout. Please check if the server is running.");
-        } else {
-          setError(
-            "Cannot connect to server. Please check if the API server is running."
-          );
-        }
-      } finally {
-        setLoading(false);
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmissions(data.data || []);
+      } else {
+        throw new Error(data.message || "Failed to fetch data");
       }
-    };
+    } catch (err) {
+      console.error("Error fetching submissions:", err);
 
+      if (err.name === "AbortError") {
+        setError("Request timeout. Please check if the server is running.");
+      } else {
+        setError(
+          "Cannot connect to server. Please check if the API server is running."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSentMessages = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        "http://localhost/API/seeta/get_sent_messages.php"
+      );
+      const data = await response.json();
+      if (data.success) {
+        setSubmissions(data.data || []);
+      } else {
+        setError(data.message || "Failed to fetch sent messages");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  // 2. Call it in useEffect
+  useEffect(() => {
     fetchSubmissions();
   }, []);
 
   // Filter submissions based on search term
   const filteredSubmissions = submissions.filter((submission) => {
     if (showSent) {
-      return submission.sent_by === "admin"; // Adjust as needed
+      // Show all sent messages (no filter)
+      return true;
     }
+    // Inbox filter (keep as is)
     return Object.values(submission).some(
       (value) =>
         value != null &&
@@ -135,16 +156,6 @@ const Message = () => {
       newSelected.add(id);
     }
     setSelectedMessages(newSelected);
-  };
-
-  const handleStarMessage = (id) => {
-    const newStarred = new Set(starredMessages);
-    if (newStarred.has(id)) {
-      newStarred.delete(id);
-    } else {
-      newStarred.add(id);
-    }
-    setStarredMessages(newStarred);
   };
 
   const handleMessageClick = (message) => {
@@ -212,6 +223,55 @@ const Message = () => {
     return colors[index];
   };
 
+  const handleDeleteMessages = async () => {
+    if (selectedMessages.size === 0) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete the selected message(s)?"
+      )
+    )
+      return;
+
+    setDeleteLoading(true);
+    setError(null);
+
+    try {
+      // Send IDs as an array
+      const res = await fetch(
+        "http://localhost/API/seeta/delete_messages.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: Array.from(selectedMessages) }),
+        }
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        // Remove deleted messages from state
+        setSubmissions((prev) =>
+          prev.filter((msg) => !selectedMessages.has(msg.id))
+        );
+        setSelectedMessages(new Set());
+      } else {
+        setError(data.message || "Failed to delete messages.");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    }
+    setDeleteLoading(false);
+  };
+
+  const handleInboxClick = () => {
+    setShowSent(false);
+    fetchSubmissions();
+  };
+
+  const handleSentClick = () => {
+    setShowSent(true);
+    fetchSentMessages();
+  };
+
   if (selectedMessage) {
     return (
       <div className="min-h-screen bg-gray-900 text-gray-100">
@@ -227,19 +287,7 @@ const Message = () => {
               </button>
               <div className="flex items-center space-x-3">
                 <button className="text-gray-400 hover:text-blue-400 p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200">
-                  <Archive size={18} />
-                </button>
-                <button
-                  className="text-gray-400 hover:text-red-400 p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200"
-                  onClick={() => handleDelete(selectedMessage.id)}
-                >
-                  <Trash2 size={18} />
-                </button>
-                <button className="text-gray-400 hover:text-green-400 p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200">
-                  <Reply size={18} />
-                </button>
-                <button className="text-gray-400 hover:text-purple-400 p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200">
-                  <Forward size={18} />
+                  <Send size={18} />
                 </button>
               </div>
             </div>
@@ -275,7 +323,6 @@ const Message = () => {
                   </div>
                 </div>
               </div>
-
               <div className="space-y-6">
                 <div className="bg-gray-800/40 rounded-xl p-4">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -329,7 +376,6 @@ const Message = () => {
                     </div>
                   )}
               </div>
-
               {/* Image Preview Modal */}
               {imagePreview && (
                 <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
@@ -346,24 +392,18 @@ const Message = () => {
                   />
                 </div>
               )}
-
               {/* Reply Section */}
               <div className="mt-8 pt-6 border-t border-gray-700/30 flex space-x-3">
                 <button
                   onClick={() => setShowReply(true)}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2 shadow-lg"
                 >
-                  <Reply size={18} />
+                  <Send size={18} />
                   <span>Reply</span>
-                </button>
-                <button className="bg-gray-800/50 text-gray-300 px-6 py-3 rounded-xl hover:bg-gray-700/50 transition-all duration-200 flex items-center space-x-2">
-                  <Forward size={18} />
-                  <span>Forward</span>
                 </button>
               </div>
 
-              {/* Reply Form - Hidden by default */}
-              {showReply && (
+              {/* {showReply && (
                 <div className="mt-8 pt-6 border-t border-gray-700/30">
                   <textarea
                     className="w-full p-2 rounded bg-gray-800 text-gray-100 mb-2"
@@ -384,6 +424,130 @@ const Message = () => {
                   >
                     Cancel
                   </button>
+                </div>
+              )} */}
+              {/* Reply Modal */}
+              {showReply && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                  <div className="bg-gray-900 rounded-2xl p-8 w-full max-w-lg shadow-2xl relative">
+                    <button
+                      className="absolute top-4 right-4 text-gray-400 hover:text-gray-200"
+                      onClick={() => {
+                        setShowReply(false);
+                        setReplyContent("");
+                        setReplyError("");
+                      }}
+                    >
+                      <X size={22} />
+                    </button>
+                    <h2 className="text-xl font-semibold mb-4 text-white">
+                      Reply to {selectedMessage.name}
+                    </h2>
+                    <div className="mb-4">
+                      <label className="block text-gray-300 mb-2">To</label>
+                      <input
+                        type="email"
+                        value={selectedMessage.email}
+                        disabled
+                        className="w-full px-3 py-2 rounded bg-gray-800 text-gray-400 border border-gray-700"
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-gray-300 mb-2">
+                        Message
+                      </label>
+                      <textarea
+                        rows={5}
+                        className="w-full px-3 py-2 rounded bg-gray-800 text-gray-100 border border-gray-700"
+                        placeholder="Type your reply..."
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                      />
+                    </div>
+                    {replyError && (
+                      <div className="text-red-400 mb-2">{replyError}</div>
+                    )}
+                    {replySuccess && (
+                      <div className="text-green-400 mb-2">
+                        Reply sent successfully!
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-2">
+                      <button
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-60"
+                        onClick={async () => {
+                          console.log(
+                            "Reply will be sent to:",
+                            selectedMessage.email
+                          );
+                          setReplyLoading(true);
+                          setReplyError("");
+                          setReplySuccess(false);
+
+                          try {
+                            const res = await fetch(
+                              "http://localhost/API/seeta/reply.php", // New endpoint
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  recipient_email: selectedMessage.email, // User's email as recipient
+                                  recipient_name: selectedMessage.name, // User's name
+                                  message: replyContent, // Admin's reply message
+                                }),
+                              }
+                            );
+
+                            const data = await res.json();
+
+                            if (data.success) {
+                              setReplySuccess(true);
+                              setReplyContent("");
+
+                              // Save to sent messages
+                              await fetch(
+                                "http://localhost/API/seeta/save_sent_message.php",
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    recipient_email: selectedMessage.email,
+                                    recipient_name: selectedMessage.name,
+                                    message: replyContent,
+                                  }),
+                                }
+                              );
+
+                              setTimeout(() => {
+                                setShowReply(false);
+                                setReplySuccess(false);
+                              }, 1500);
+                            } else {
+                              setReplyError(
+                                data.message || "Failed to send reply."
+                              );
+                            }
+                          } catch (err) {
+                            console.error("Reply error:", err);
+                            setReplyError("Network error. Please try again.");
+                          }
+
+                          setReplyLoading(false);
+                        }}
+                        disabled={replyLoading || !replyContent.trim()}
+                      >
+                        {replyLoading ? "Sending..." : "Send Reply"}
+                      </button>
+                      <button
+                        className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        onClick={() => setShowReply(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -412,15 +576,6 @@ const Message = () => {
               <h1 className="text-xl font-light text-gray-100">School Inbox</h1>
             </div>
           </div>
-
-          <div className="flex items-center space-x-3">
-            <button className="p-2 hover:bg-gray-700/50 rounded-lg transition-all duration-200 text-gray-400 hover:text-gray-200">
-              <Settings size={18} />
-            </button>
-            <button className="p-2 hover:bg-gray-700/50 rounded-lg transition-all duration-200 text-gray-400 hover:text-gray-200">
-              <User size={18} />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -435,7 +590,8 @@ const Message = () => {
             <div
               className={`flex items-center space-x-3 p-3 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 ${
                 !sidebarOpen ? "justify-center" : ""
-              }`}
+              } cursor-pointer`}
+              onClick={handleInboxClick}
             >
               <Inbox size={20} className="text-blue-400" />
               {sidebarOpen && (
@@ -443,7 +599,8 @@ const Message = () => {
               )}
               {sidebarOpen && (
                 <span className="ml-auto bg-blue-600/30 text-blue-300 text-xs px-2 py-1 rounded-full">
-                  {filteredSubmissions.length}
+                  {/* Show count only for inbox */}
+                  {!showSent ? filteredSubmissions.length : ""}
                 </span>
               )}
             </div>
@@ -452,32 +609,10 @@ const Message = () => {
               className={`flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-700/30 transition-all duration-200 cursor-pointer ${
                 !sidebarOpen ? "justify-center" : ""
               }`}
-            >
-              <Star size={20} className="text-yellow-400" />
-              {sidebarOpen && <span className="text-gray-300">Starred</span>}
-              {sidebarOpen && (
-                <span className="ml-auto text-gray-500 text-xs">
-                  {starredMessages.size}
-                </span>
-              )}
-            </div>
-
-            <div
-              className={`flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-700/30 transition-all duration-200 cursor-pointer ${
-                !sidebarOpen ? "justify-center" : ""
-              }`}
+              onClick={handleSentClick}
             >
               <Send size={20} className="text-green-400" />
               {sidebarOpen && <span className="text-gray-300">Sent</span>}
-            </div>
-
-            <div
-              className={`flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-700/30 transition-all duration-200 cursor-pointer ${
-                !sidebarOpen ? "justify-center" : ""
-              }`}
-            >
-              <Trash2 size={20} className="text-red-400" />
-              {sidebarOpen && <span className="text-gray-300">Trash</span>}
             </div>
           </div>
         </div>
@@ -500,10 +635,12 @@ const Message = () => {
                   size={16}
                 />
               </div>
-              <button className="p-3 bg-gray-800/40 border border-gray-700/50 rounded-xl hover:bg-gray-700/40 transition-all duration-200">
-                <Filter size={16} className="text-gray-400" />
-              </button>
-              <button className="p-3 bg-gray-800/40 border border-gray-700/50 rounded-xl hover:bg-gray-700/40 transition-all duration-200">
+              <button
+                className="p-3 bg-gray-800/40 border border-gray-700/50 rounded-xl hover:bg-gray-700/40 transition-all duration-200"
+                onClick={fetchSubmissions} // <-- Add this
+                disabled={loading}
+                title="Refresh"
+              >
                 <RefreshCw size={16} className="text-gray-400" />
               </button>
             </div>
@@ -524,18 +661,22 @@ const Message = () => {
                       onChange={handleSelectAll}
                       className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800"
                     />
-                    <button className="text-gray-400 hover:text-blue-400 p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200">
-                      <Archive size={16} />
-                    </button>
-                    <button className="text-gray-400 hover:text-red-400 p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200">
-                      <Trash2 size={16} />
-                    </button>
                   </div>
 
                   {selectedMessages.size > 0 && (
-                    <span className="text-sm text-blue-400 bg-blue-600/20 px-3 py-1 rounded-lg">
-                      {selectedMessages.size} selected
-                    </span>
+                    <>
+                      <span className="text-sm text-blue-400 bg-blue-600/20 px-3 py-1 rounded-lg">
+                        {selectedMessages.size} selected
+                      </span>
+                      <button
+                        className="ml-2 px-3 py-1 rounded-lg bg-red-600/80 text-white hover:bg-red-700 transition-all duration-200 disabled:opacity-60"
+                        onClick={handleDeleteMessages}
+                        disabled={deleteLoading}
+                        title="Delete selected"
+                      >
+                        {deleteLoading ? "Deleting..." : "Delete"}
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -636,28 +777,10 @@ const Message = () => {
                       <input
                         type="checkbox"
                         checked={selectedMessages.has(submission.id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          handleSelectMessage(submission.id);
-                        }}
+                        onClick={(e) => e.stopPropagation()} // Prevents opening the message
+                        onChange={(e) => handleSelectMessage(submission.id)}
                         className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800"
                       />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStarMessage(submission.id);
-                        }}
-                        className="text-gray-500 hover:text-yellow-400 transition-colors duration-200"
-                      >
-                        <Star
-                          size={16}
-                          className={
-                            starredMessages.has(submission.id)
-                              ? "text-yellow-400 fill-yellow-400"
-                              : ""
-                          }
-                        />
-                      </button>
                     </div>
 
                     <div className="flex-1 min-w-0 ml-4">
@@ -665,10 +788,16 @@ const Message = () => {
                         <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <div
                             className={`w-10 h-10 ${getAvatarColor(
-                              submission.name
+                              showSent
+                                ? submission.recipient_name
+                                : submission.name
                             )} rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-lg`}
                           >
-                            {getInitials(submission.name)}
+                            {getInitials(
+                              showSent
+                                ? submission.recipient_name
+                                : submission.name
+                            )}
                           </div>
                           <div
                             className={`font-medium flex-shrink-0 w-48 truncate ${
@@ -677,7 +806,9 @@ const Message = () => {
                                 : "text-gray-300"
                             }`}
                           >
-                            {submission.name}
+                            {showSent
+                              ? submission.recipient_name
+                              : submission.name}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div
@@ -694,35 +825,12 @@ const Message = () => {
                                     : "font-normal"
                                 }`}
                               >
-                                Contact Form -{" "}
+                                {showSent
+                                  ? "Sent Message - "
+                                  : "Contact Form - "}
                               </span>
                               {truncateMessage(submission.message)}
                             </div>
-                            {/* Add Image Preview Thumbnail */}
-                            {submission.images &&
-                              submission.images.length > 0 && (
-                                <div className="flex space-x-2 mt-2">
-                                  {submission.images
-                                    .slice(0, 3)
-                                    .map((image, index) => (
-                                      <div
-                                        key={index}
-                                        className="w-8 h-8 rounded-lg overflow-hidden"
-                                      >
-                                        <img
-                                          src={image.url}
-                                          alt={`Thumbnail ${index + 1}`}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      </div>
-                                    ))}
-                                  {submission.images.length > 3 && (
-                                    <div className="w-8 h-8 rounded-lg bg-gray-700 flex items-center justify-center text-xs text-gray-300">
-                                      +{submission.images.length - 3}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
                           </div>
                         </div>
                         <div className="text-sm text-gray-500 flex-shrink-0 ml-4 bg-gray-800/30 px-2 py-1 rounded-lg">
